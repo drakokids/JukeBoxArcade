@@ -110,6 +110,11 @@
             <Form>Mainform</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="ConfigDlg.pas">
+            <Form>ConfigDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="MediaFilesFunctions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -136,7 +141,7 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
-                <DeployFile LocalName="Win32\Debug\JukeBoxArcade.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\bin32\JukeBoxArcade.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>JukeBoxArcade.exe</RemoteName>
                         <Overwrite>true</Overwrite>
