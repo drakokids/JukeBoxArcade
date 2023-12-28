@@ -115,6 +115,8 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="MediaFilesFunctions.pas"/>
+        <DCCReference Include="SQLiteFunctions.pas"/>
+        <DCCReference Include="MediaTypes.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

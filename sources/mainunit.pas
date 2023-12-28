@@ -9,7 +9,9 @@ uses
   FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
   FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
   FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.VCLUI.Wait, Data.DB,
-  FireDAC.Comp.Client;
+  FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.Grids, Vcl.ComCtrls,
+  Vcl.Imaging.pngimage, Vcl.ExtCtrls;
 
 type
   TMainform = class(TForm)
@@ -31,9 +33,22 @@ type
     ImportfromCDDVD1: TMenuItem;
     CDPlayer1: TMenuItem;
     DB1: TFDConnection;
+    FDQuery1: TFDQuery;
+    PageControl1: TPageControl;
+    TabAlbums: TTabSheet;
+    TabMusicFiles: TTabSheet;
+    TabRadio: TTabSheet;
+    DrawGrid1: TDrawGrid;
+    DrawGrid2: TDrawGrid;
+    DrawGrid3: TDrawGrid;
+    Panel1: TPanel;
+    Image1: TImage;
+    Image2: TImage;
+    Image3: TImage;
     procedure Config1Click(Sender: TObject);
     procedure AddFolder1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     { Private declarations }
   public
@@ -50,7 +65,8 @@ implementation
 
 {$R *.dfm}
 
-uses configdlg, FileCtrl,MediaFilesFunctions;
+uses configdlg, FileCtrl,MediaFilesFunctions, MediaTypes,SQLiteFunctions,
+   bass;
 
 procedure TMainform.AddFolder1Click(Sender: TObject);
 var Dir: string;
@@ -74,6 +90,9 @@ const
   DBName = 'c:\databases\jukebox.db';
 begin
 
+    if not BASS_Init(0,44100,0,Application.Handle,nil) then
+      ShowMessage('Can''t initialize device');
+
     Needs2Create:=not FileExists(DBName);
 
     DB1.Params.Values['database'] := DBName;
@@ -81,34 +100,15 @@ begin
 
     if Needs2Create then
      begin
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS Singers ('+
-       'ID INTEGER ,PRIMARY KEY ("ID" AUTOINCREMENT),'+
-       'SingerName TEXT NOT NULL,'+
-       'CountryID INTEGER, Sex TEXT, Born DATE, Died DATE'+
-       ');');
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS Albums ('+
-        'ID INTEGER ,PRIMARY KEY("ID" AUTOINCREMENT),'+
-        'AlbumName TEXT NOT NULL,'+
-        'AlbumDate DATE);');
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS Bands ('+
-        'ID INTEGER ,PRIMARY KEY ("ID" AUTOINCREMENT),'+
-        'BandName TEXT NOT NULL,'+
-        'StartDate TEXT, EndedDate TEXT);');
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS Musics ('+
-        'ID INTEGER ,PRIMARY KEY ("ID" AUTOINCREMENT),'+
-        'MusicName TEXT NOT NULL,'+
-        'Filename TEXT, Filetype TEXT);');
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS AlbumBands ('+
-        'AlbumID INTEGER, BandID INTEGER)');
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS AlbumSingers ('+
-        'AlbumID INTEGER, SingerID INTEGER)');
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS AlbumMusics ('+
-        'AlbumID INTEGER, MusicID INTEGER)');
-       DB1.ExecSQL('CREATE TABLE IF NOT EXISTS RadioStreams ('+
-        'ID INTEGER PRIMARY KEY ("ID" AUTOINCREMENT), '+
-        'StreamName TEXT, URL TEXT)');
+       CreateSQLiteDB(DB1);
+
      end;
 
+end;
+
+procedure TMainform.FormDestroy(Sender: TObject);
+begin
+    Bass_Free();
 end;
 
 end.

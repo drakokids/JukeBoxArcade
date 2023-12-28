@@ -4,7 +4,9 @@ uses
   Vcl.Forms,
   mainunit in 'mainunit.pas' {Mainform},
   ConfigDlg in 'ConfigDlg.pas' {ConfigDialog},
-  MediaFilesFunctions in 'MediaFilesFunctions.pas';
+  MediaFilesFunctions in 'MediaFilesFunctions.pas',
+  SQLiteFunctions in 'SQLiteFunctions.pas',
+  MediaTypes in 'MediaTypes.pas';
 
 {$R *.res}
 
