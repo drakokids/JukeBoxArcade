@@ -64,7 +64,9 @@ begin
 
        connection1.ExecSQL('CREATE TABLE IF NOT EXISTS RadioStreams ('+
         'ID INTEGER, '+
-        'StreamName TEXT, URL TEXT,PRIMARY KEY ("ID" AUTOINCREMENT))');
+        'StreamName TEXT, URL TEXT,'+
+        'homepage TEXT, tags TEXT, countrycode TEXT, codec TEXT, bitrate TEXT,lastdateok TEXT,'+
+        'PRIMARY KEY ("ID" AUTOINCREMENT))');
 end;
 
 function MediaFileExists(filename:string):boolean;
@@ -93,7 +95,7 @@ begin
      begin
       s:=EncodeString(filename);
       mainform.DB1.ExecSQL('insert into musics (MusicName,filename,filetype,deleted) values ('''+
-       EncodeString(MediaInfo.title)+''','''+s+'',''+MediaInfo.fileType+'',''0'')');
+       EncodeString(MediaInfo.title)+''','''+s+''','''+MediaInfo.fileType+''',''0'')');
      end
     else
      begin

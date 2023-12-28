@@ -45,10 +45,12 @@ type
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
+    Image4: TImage;
     procedure Config1Click(Sender: TObject);
     procedure AddFolder1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure Image4Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -66,7 +68,7 @@ implementation
 {$R *.dfm}
 
 uses configdlg, FileCtrl,MediaFilesFunctions, MediaTypes,SQLiteFunctions,
-   bass;
+   bass, apifunctions;
 
 procedure TMainform.AddFolder1Click(Sender: TObject);
 var Dir: string;
@@ -109,6 +111,11 @@ end;
 procedure TMainform.FormDestroy(Sender: TObject);
 begin
     Bass_Free();
+end;
+
+procedure TMainform.Image4Click(Sender: TObject);
+begin
+  updateRadioStations('PT','','128','');
 end;
 
 end.

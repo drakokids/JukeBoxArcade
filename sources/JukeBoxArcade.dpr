@@ -6,7 +6,9 @@ uses
   ConfigDlg in 'ConfigDlg.pas' {ConfigDialog},
   MediaFilesFunctions in 'MediaFilesFunctions.pas',
   SQLiteFunctions in 'SQLiteFunctions.pas',
-  MediaTypes in 'MediaTypes.pas';
+  MediaTypes in 'MediaTypes.pas',
+  apifunctions in 'apifunctions.pas',
+  djson in 'djson.pas';
 
 {$R *.res}
 
