@@ -53,6 +53,7 @@ type
     procedure Image4Click(Sender: TObject);
     procedure GridRadiosDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
   public
@@ -68,6 +69,7 @@ var
   AllAlbums: array of TAlbumInfo;
   AllMedia: array of TMediaInfo;
   AllVideos: array of TVideoInfo;
+  AllCovers: array of TBitmap;
 
 const
   SELDIRHELP = 1000;
@@ -77,7 +79,7 @@ implementation
 {$R *.dfm}
 
 uses configdlg, FileCtrl,MediaFilesFunctions,SQLiteFunctions,
-   bass, apifunctions, inifiles;
+   bass, apifunctions, inifiles, EnhGraphicLib;
 
 procedure TMainform.AddFolder1Click(Sender: TObject);
 var Dir: string;
@@ -97,18 +99,41 @@ end;
 
 procedure TMainform.GridRadiosDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
+var image: TPicture;
+    extension: string;
+    bmp1,bmp2: TBitmap;
 begin
   if ARow=0 then
    begin
     if ACol=0 then GridRadios.Canvas.Textout(Rect.left+1,1,'Icon');
     if ACol=1 then GridRadios.Canvas.Textout(Rect.left+1,1,'Radio');
-    if ACol=2 then GridRadios.Canvas.Textout(Rect.left+1,1,'xxxxx');
+    if ACol=2 then GridRadios.Canvas.Textout(Rect.left+1,1,'Country');
+    if ACol=3 then GridRadios.Canvas.Textout(Rect.left+1,1,'Bitrate');
     end
    else
     begin
-     if ACol=1 then GridRadios.Canvas.Textout(Rect.left+1,1,AllRadios[ARow-1].Name);
+     if Acol=0 then begin
+                     if (AllRadios[ARow-1].coverid>=0) then
+                      begin
+                         GridRadios.Canvas.Draw(Rect.left,Rect.top,AllCovers[AllRadios[ARow-1].coverid]);
+                      end;
+                    end;
+
+     if ACol=1 then GridRadios.Canvas.Textout(Rect.left+1,Rect.top+1,
+                               DecodeString(AllRadios[ARow-1].Name));
+     if ACol=2 then GridRadios.Canvas.Textout(Rect.left+1,Rect.top+1,
+                               AllRadios[ARow-1].countrycode);
+     if ACol=3 then GridRadios.Canvas.Textout(Rect.left+1,Rect.top+1,
+                               AllRadios[ARow-1].bitrate);
     end;
 
+end;
+
+procedure TMainform.FormClose(Sender: TObject; var Action: TCloseAction);
+var i: integer;
+begin
+    for i := 0 to length(AllCovers)-1 do
+     AllCovers[i].Free;
 end;
 
 procedure TMainform.FormCreate(Sender: TObject);
@@ -138,13 +163,11 @@ begin
      end;
 
     GridRadios.RowHeights[0]:=24;
-    GridRadios.ColWidths[0]:=80;
-    GridRadios.ColWidths[1]:=200;
+    GridRadios.ColWidths[0]:=130;
+    GridRadios.ColWidths[1]:=400;
 
     LoadAllRadios;
-    GridRadios.RowCount:=Length(AllRadios)+1;
-
-    GridRadios.Invalidate;
+    
 
 end;
 

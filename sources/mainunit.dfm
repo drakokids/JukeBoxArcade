@@ -11,6 +11,7 @@ object Mainform: TMainform
   Font.Name = 'Segoe UI'
   Font.Style = []
   Menu = MainMenu1
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15

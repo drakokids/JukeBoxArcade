@@ -9,7 +9,7 @@ uses system.Types, MediaTypes,sysutils,System.StrUtils,
   FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
   FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.VCLUI.Wait, Data.DB,
   FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
-  FireDAC.DApt, FireDAC.Comp.DataSet;
+  FireDAC.DApt, FireDAC.Comp.DataSet, graphics;
 
 procedure ScanFolder(folder: string);
 function GetMediaInfo(filename: string): TMediaInfo;
@@ -20,7 +20,8 @@ procedure LoadAllVideos;
 
 implementation
 
-uses mainunit,SQLiteFunctions,System.IOUtils, tags, bass, basswma;
+uses mainunit,SQLiteFunctions,System.IOUtils, tags, bass, basswma,
+    functions, ImagingTypes, Imaging, ImagingComponents;
 
 procedure ScanFolder(folder: string);
 Var
@@ -80,6 +81,8 @@ end;
 procedure LoadAllRadios;
 var query1: TFDQuery;
     index:integer;
+    extension:string;
+    Img: TImageData;
 begin
    SetLength(AllRadios,0);
 
@@ -92,9 +95,40 @@ begin
    while not query1.eof do
     begin
 
+     SetLength(AllRadios,Length(AllRadios)+1);
+
      AllRadios[index].id:=query1.fieldbyname('ID').asstring;
      AllRadios[index].Name:=query1.fieldbyname('StreamName').asstring;
      AllRadios[index].url:=query1.fieldbyname('URL').asstring;
+     AllRadios[index].cover:=query1.fieldbyname('COVER').asstring;
+     AllRadios[index].bitrate:=query1.fieldbyname('BITRATE').asstring;
+     AllRadios[index].codec:=query1.fieldbyname('CODEC').asstring;
+     AllRadios[index].countrycode:=query1.fieldbyname('COUNTRYCODE').asstring;
+     AllRadios[index].coverid:=-1;
+
+     if AllRadios[index].cover<>'' then
+     if fileexists(IconsFolder+'\'+AllRadios[index].cover) then
+      begin
+       extension:=uppercase(ExtractFileExt(IconsFolder+'\'+AllRadios[index].cover));
+       if (extension='.PNG') or ((extension='.JPG')) or ((extension='.GIF'))
+       then
+        begin
+         AllRadios[index].coverid:=length(AllCovers);
+         Setlength(AllCovers,length(AllCovers)+1);
+         AllCovers[length(AllCovers)-1]:=TBitmap.Create(128,128);
+
+         logwrite('Working Image '+AllRadios[index].cover);
+         InitImage(Img);
+         LoadImageFromFile(IconsFolder+'\'+AllRadios[index].cover, Img);
+         ResizeImage(Img, 128, 128, rfBicubic);
+         ConvertDataToBitmap(Img,AllCovers[length(AllCovers)-1]);
+
+         FreeImage(Img);
+
+
+        end;
+      end;
+
 
      query1.next;
      index:=index+1;
@@ -102,6 +136,9 @@ begin
 
 
    query1.Free;
+
+   mainform.GridRadios.RowCount:=Length(AllRadios)+1;
+   mainform.GridRadios.Invalidate;
 
 end;
 

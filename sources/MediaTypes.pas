@@ -6,7 +6,8 @@ uses graphics;
 
 type
  TRadioInfo=record
-  id,Name,tags,url,bitrate,codec,countrycode: string;
+  id,Name,tags,url,bitrate,codec,countrycode,cover: string;
+  coverid:integer;
  end;
 
 type

@@ -15,12 +15,13 @@ procedure CreateSQLiteDB(connection1: TFDConnection);
 function MediaFileExists(filename:string):boolean;
 procedure MediaAddFile(filename: string; MediaInfo: TMediaInfo);
 function EncodeString(Original: string):string;
+function DecodeString(Original: string):string;
 function RadioExists(url:string):boolean;
 procedure AddRadio(name,url,tags,favicon,countrycode,codec,bitrate:string);
 
 implementation
 
-uses mainunit, FDACSQLite, functions;
+uses mainunit, FDACSQLite, functions, EnhGraphicLib;
 
 procedure CreateSQLiteDB(connection1: TFDConnection);
 begin
@@ -65,9 +66,9 @@ begin
         'AlbumID INTEGER, MusicID INTEGER)');
 
        connection1.ExecSQL('CREATE TABLE IF NOT EXISTS RadioStreams ('+
-        'ID INTEGER, '+
-        'StreamName TEXT, URL TEXT,'+
-        'homepage TEXT, tags TEXT, countrycode TEXT, codec TEXT, bitrate TEXT,lastdateok TEXT,'+
+        'ID INTEGER,StreamName TEXT, URL TEXT,'+
+        'homepage TEXT, tags TEXT, countrycode TEXT, codec TEXT, '+
+        'bitrate TEXT,lastdateok TEXT,cover TEXT,'+
         'PRIMARY KEY ("ID" AUTOINCREMENT))');
 end;
 
@@ -120,7 +121,7 @@ function DecodeString(Original: string):string;
 var destiny:string;
     i:integer;
 begin
-    for i := 0 to length(Original) div 2 do
+    for i := 0 to (length(Original) div 2)-1 do
      begin
       destiny:=destiny+chr(StrToInt('$' +Original[i*2+1] +Original[i*2+2] ));
      end;
@@ -139,21 +140,24 @@ begin
 end;
 
 procedure AddRadio(name,url,tags,favicon,countrycode,codec,bitrate:string);
-var id,extension:string;
+var id,extension,cover:string;
 begin
    if RadioExists(url) then exit;
 
-   mainform.DB1.ExecSQL('insert into radiostreams(StreamName, URL,'+
-        'homepage, tags, countrycode, codec, bitrate,lastdateok)values('''+
-        EncodeString(name)+''','''+url+''','''','''+EncodeString(tags)+''','''+countrycode+''','''+
-        codec+''','''+bitrate+''','''')');
+   cover:='';
 
    if favicon<>'' then
     begin
      id:=inttostr(GetMaxValue(mainform.DB1, 'radiostreams','ID'));
      extension:=ExtractFileExt(favicon);
      NewDownloadFile(favicon,IconsFolder+'\radio_'+id+extension);
+     cover:='radio_'+id+extension;
     end;
+
+   mainform.DB1.ExecSQL('insert into radiostreams(StreamName, URL,'+
+        'homepage, tags, countrycode, codec, bitrate,cover,lastdateok)values('''+
+        EncodeString(name)+''','''+url+''','''','''+EncodeString(tags)+''','''+countrycode+''','''+
+        codec+''','''+bitrate+''','''+cover+''','''')');
 
 end;
 
