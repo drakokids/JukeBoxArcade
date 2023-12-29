@@ -54,6 +54,7 @@ object Mainform: TMainform
         Height = 409
         DefaultRowHeight = 64
         TabOrder = 0
+        OnDrawCell = DrawGrid3DrawCell
       end
       object Panel1: TPanel
         Left = 0

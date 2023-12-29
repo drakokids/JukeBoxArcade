@@ -15,10 +15,12 @@ procedure CreateSQLiteDB(connection1: TFDConnection);
 function MediaFileExists(filename:string):boolean;
 procedure MediaAddFile(filename: string; MediaInfo: TMediaInfo);
 function EncodeString(Original: string):string;
+function RadioExists(url:string):boolean;
+procedure AddRadio(name,url,tags,favicon,countrycode,codec,bitrate:string);
 
 implementation
 
-uses mainunit;
+uses mainunit, FDACSQLite, functions;
 
 procedure CreateSQLiteDB(connection1: TFDConnection);
 begin
@@ -123,6 +125,36 @@ begin
       destiny:=destiny+chr(StrToInt('$' +Original[i*2+1] +Original[i*2+2] ));
      end;
     result:=destiny;
+end;
+
+function RadioExists(url:string):boolean;
+var query1: TFDQuery;
+begin
+    query1:=TFDQuery.Create(nil);
+    query1.Connection:=mainform.DB1;
+    query1.SQL.Text:='Select count(*) as howmany from radiostreams where url='''+url+'''';
+    query1.open;
+    result:=query1.fieldbyname('howmany').asstring<>'0';
+    query1.Free;
+end;
+
+procedure AddRadio(name,url,tags,favicon,countrycode,codec,bitrate:string);
+var id,extension:string;
+begin
+   if RadioExists(url) then exit;
+
+   mainform.DB1.ExecSQL('insert into radiostreams(StreamName, URL,'+
+        'homepage, tags, countrycode, codec, bitrate,lastdateok)values('''+
+        EncodeString(name)+''','''+url+''','''','''+EncodeString(tags)+''','''+countrycode+''','''+
+        codec+''','''+bitrate+''','''')');
+
+   if favicon<>'' then
+    begin
+     id:=inttostr(GetMaxValue(mainform.DB1, 'radiostreams','ID'));
+     extension:=ExtractFileExt(favicon);
+     NewDownloadFile(favicon,IconsFolder+'\radio_'+id+extension);
+    end;
+
 end;
 
 end.

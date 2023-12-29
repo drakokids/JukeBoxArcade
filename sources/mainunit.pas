@@ -11,7 +11,7 @@ uses
   FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.VCLUI.Wait, Data.DB,
   FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.Grids, Vcl.ComCtrls,
-  Vcl.Imaging.pngimage, Vcl.ExtCtrls;
+  Vcl.Imaging.pngimage, Vcl.ExtCtrls, MediaTypes;
 
 type
   TMainform = class(TForm)
@@ -51,6 +51,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure Image4Click(Sender: TObject);
+    procedure DrawGrid3DrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
   private
     { Private declarations }
   public
@@ -59,6 +61,8 @@ type
 
 var
   Mainform: TMainform;
+  AppFolder,IconsFolder,DBName: string;
+  AllRadios: array of TRadioInfo;
 
 const
   SELDIRHELP = 1000;
@@ -67,8 +71,8 @@ implementation
 
 {$R *.dfm}
 
-uses configdlg, FileCtrl,MediaFilesFunctions, MediaTypes,SQLiteFunctions,
-   bass, apifunctions;
+uses configdlg, FileCtrl,MediaFilesFunctions,SQLiteFunctions,
+   bass, apifunctions, inifiles;
 
 procedure TMainform.AddFolder1Click(Sender: TObject);
 var Dir: string;
@@ -86,11 +90,33 @@ begin
       ConfigDialog.Execute;
 end;
 
+procedure TMainform.DrawGrid3DrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+begin
+  if ARow=0 then
+   begin
+    if ACol=0 then DrawGrid3.Canvas.Textout(Rect.left+1,1,'Icon');
+    if ACol=1 then DrawGrid3.Canvas.Textout(Rect.left+1,1,'Radio');
+    if ACol=2 then DrawGrid3.Canvas.Textout(Rect.left+1,1,'xxxxx');
+    end
+   else
+    begin
+     DrawGrid3.Canvas.TextRect(Rect,1,1,'C');
+    end;
+
+end;
+
 procedure TMainform.FormCreate(Sender: TObject);
 var Needs2Create:boolean;
-const
-  DBName = 'c:\databases\jukebox.db';
+    myini: TInifile;
 begin
+
+    AppFolder:=Extractfilepath(application.ExeName);
+
+    myini:=TInifile.Create(AppFolder+'\config.ini');
+    IconsFolder:=myini.ReadString('MAIN','mediafolder','')+'\icons';
+    DBName:=myini.ReadString('MAIN','database','');
+    myini.Free;
 
     if not BASS_Init(0,44100,0,Application.Handle,nil) then
       ShowMessage('Can''t initialize device');
@@ -105,6 +131,8 @@ begin
        CreateSQLiteDB(DB1);
 
      end;
+
+    DrawGrid3.RowHeights[0]:=24;
 
 end;
 

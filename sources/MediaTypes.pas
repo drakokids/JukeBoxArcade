@@ -13,6 +13,11 @@ type
   FileType: string;
  end;
 
+ type
+  TRadioInfo=record
+   id,Name,tags,url,bitrate,codec,countrycode: string;
+  end;
+
 implementation
 
 end.

@@ -6,12 +6,12 @@ procedure updateRadioStations(countrycode,tags,bitratemin,codec: string);
 
 implementation
 
-uses functions,djson;
+uses functions,djson,sqliteFunctions;
 
 procedure updateRadioStations(countrycode,tags,bitratemin,codec: string);
 var netfile,url: string;
     radios, radio:  TdJSON;
-    radioname:string;
+    radioname,radiourl,radiotags,radiobitrate,radiocodec,radiocountrycode,radiofavicon:string;
 begin
   //http://de1.api.radio-browser.info/xml/stations/bycountry/portugal
   //http://de1.api.radio-browser.info/json/stations/search?countrycode=PT&bitrateMin=256&codec=MP3&tag=rock
@@ -22,13 +22,19 @@ begin
   if codec<>'' then url:=url+'&codec='+codec;
   if bitratemin<>'' then url:=url+'&bitrateMin='+codec;
 
-
-
   netfile:=DownloadFile(url);
   radios := TdJSON.Parse(netfile);
   for radio in radios do
    begin
     radioname:=radio['name'].AsString;
+    radiourl:=radio['url_resolved'].AsString;
+    radiotags:=radio['tags'].AsString;
+    radiobitrate:=radio['bitrate'].AsString;
+    radiocodec:=radio['codec'].AsString;
+    radiocountrycode:=radio['countrycode'].AsString;
+    radiofavicon:=radio['favicon'].AsString;
+    AddRadio(radioname,radiourl,radiotags,radiofavicon,radiocountrycode,
+        radiocodec,radiobitrate);
    end;
   radios.Free;
 end;
