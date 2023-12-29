@@ -2,15 +2,25 @@ unit MediaFilesFunctions;
 
 interface
 
-uses system.Types, MediaTypes,sysutils,System.StrUtils;
+uses system.Types, MediaTypes,sysutils,System.StrUtils,
+    FireDAC.Stan.Intf,
+  FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf,
+  FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
+  FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
+  FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.VCLUI.Wait, Data.DB,
+  FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, FireDAC.Comp.DataSet;
 
 procedure ScanFolder(folder: string);
 function GetMediaInfo(filename: string): TMediaInfo;
 function ValidMusicExtension(fileext: string):boolean;
+procedure LoadAllRadios;
+procedure LoadAllMusic;
+procedure LoadAllVideos;
 
 implementation
 
-uses SQLiteFunctions,System.IOUtils, tags, bass, basswma;
+uses mainunit,SQLiteFunctions,System.IOUtils, tags, bass, basswma;
 
 procedure ScanFolder(folder: string);
 Var
@@ -64,6 +74,47 @@ begin
    result:=MatchText(fileext, ['.MP3', '.WAV','.FLAC','.AAC','.AIFF','.OGG',
      '.WMA','.CDA']);
 
+end;
+
+//Load All Radios from DB to structure
+procedure LoadAllRadios;
+var query1: TFDQuery;
+    index:integer;
+begin
+   SetLength(AllRadios,0);
+
+   query1:=TFDQuery.Create(nil);
+   query1.Connection:=mainform.DB1;
+   query1.SQL.Text:='Select * from RadioStreams';
+   query1.open;
+
+   index:=0;
+   while not query1.eof do
+    begin
+
+     AllRadios[index].id:=query1.fieldbyname('ID').asstring;
+     AllRadios[index].Name:=query1.fieldbyname('StreamName').asstring;
+     AllRadios[index].url:=query1.fieldbyname('URL').asstring;
+
+     query1.next;
+     index:=index+1;
+    end;
+
+
+   query1.Free;
+
+end;
+
+//Load All Music from DB to structure
+procedure LoadAllMusic;
+begin
+   SetLength(AllMedia,0);
+end;
+
+//Load All Videos from DB to structure
+procedure LoadAllVideos;
+begin
+   SetLength(AllVideos,0);
 end;
 
 

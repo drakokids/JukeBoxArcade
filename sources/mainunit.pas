@@ -40,7 +40,7 @@ type
     TabRadio: TTabSheet;
     DrawGrid1: TDrawGrid;
     DrawGrid2: TDrawGrid;
-    DrawGrid3: TDrawGrid;
+    GridRadios: TDrawGrid;
     Panel1: TPanel;
     Image1: TImage;
     Image2: TImage;
@@ -51,7 +51,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure Image4Click(Sender: TObject);
-    procedure DrawGrid3DrawCell(Sender: TObject; ACol, ARow: Integer;
+    procedure GridRadiosDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
   private
     { Private declarations }
@@ -63,6 +63,11 @@ var
   Mainform: TMainform;
   AppFolder,IconsFolder,DBName: string;
   AllRadios: array of TRadioInfo;
+  AllAuthors: array of TAuthorInfo;
+  AllBands: array of TBandInfo;
+  AllAlbums: array of TAlbumInfo;
+  AllMedia: array of TMediaInfo;
+  AllVideos: array of TVideoInfo;
 
 const
   SELDIRHELP = 1000;
@@ -90,18 +95,18 @@ begin
       ConfigDialog.Execute;
 end;
 
-procedure TMainform.DrawGrid3DrawCell(Sender: TObject; ACol, ARow: Integer;
+procedure TMainform.GridRadiosDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 begin
   if ARow=0 then
    begin
-    if ACol=0 then DrawGrid3.Canvas.Textout(Rect.left+1,1,'Icon');
-    if ACol=1 then DrawGrid3.Canvas.Textout(Rect.left+1,1,'Radio');
-    if ACol=2 then DrawGrid3.Canvas.Textout(Rect.left+1,1,'xxxxx');
+    if ACol=0 then GridRadios.Canvas.Textout(Rect.left+1,1,'Icon');
+    if ACol=1 then GridRadios.Canvas.Textout(Rect.left+1,1,'Radio');
+    if ACol=2 then GridRadios.Canvas.Textout(Rect.left+1,1,'xxxxx');
     end
    else
     begin
-     DrawGrid3.Canvas.TextRect(Rect,1,1,'C');
+     if ACol=1 then GridRadios.Canvas.Textout(Rect.left+1,1,AllRadios[ARow-1].Name);
     end;
 
 end;
@@ -132,7 +137,14 @@ begin
 
      end;
 
-    DrawGrid3.RowHeights[0]:=24;
+    GridRadios.RowHeights[0]:=24;
+    GridRadios.ColWidths[0]:=80;
+    GridRadios.ColWidths[1]:=200;
+
+    LoadAllRadios;
+    GridRadios.RowCount:=Length(AllRadios)+1;
+
+    GridRadios.Invalidate;
 
 end;
 

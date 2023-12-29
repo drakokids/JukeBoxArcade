@@ -47,14 +47,14 @@ object Mainform: TMainform
     object TabRadio: TTabSheet
       Caption = 'Radio'
       ImageIndex = 2
-      object DrawGrid3: TDrawGrid
+      object GridRadios: TDrawGrid
         Left = 32
         Top = 32
         Width = 625
         Height = 409
         DefaultRowHeight = 64
         TabOrder = 0
-        OnDrawCell = DrawGrid3DrawCell
+        OnDrawCell = GridRadiosDrawCell
       end
       object Panel1: TPanel
         Left = 0
