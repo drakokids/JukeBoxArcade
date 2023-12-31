@@ -21,7 +21,7 @@ procedure LoadAllVideos;
 implementation
 
 uses mainunit,SQLiteFunctions,System.IOUtils, tags, bass, basswma,
-    functions, ImagingTypes, Imaging, ImagingComponents;
+    functions, ImagingTypes, Imaging, ImagingComponents,dialogs;
 
 procedure ScanFolder(folder: string);
 Var
@@ -115,13 +115,17 @@ begin
         begin
          AllRadios[index].coverid:=length(AllCovers);
          Setlength(AllCovers,length(AllCovers)+1);
-         AllCovers[length(AllCovers)-1]:=TBitmap.Create(128,128);
 
          logwrite('Working Image '+AllRadios[index].cover);
          InitImage(Img);
-         LoadImageFromFile(IconsFolder+'\'+AllRadios[index].cover, Img);
-         ResizeImage(Img, 128, 128, rfBicubic);
-         ConvertDataToBitmap(Img,AllCovers[length(AllCovers)-1]);
+
+         if LoadImageFromFile(IconsFolder+'\'+AllRadios[index].cover, Img) then
+          begin
+           ResizeImage(Img, 128, 128, rfBicubic);
+
+           AllCovers[length(AllCovers)-1]:=TBitmap.Create(128,128);
+           ConvertDataToBitmap(Img,AllCovers[length(AllCovers)-1]);
+          end;
 
          FreeImage(Img);
 

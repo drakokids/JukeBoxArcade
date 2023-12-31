@@ -54,6 +54,8 @@ type
     procedure GridRadiosDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Image1Click(Sender: TObject);
+    procedure Image2Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -70,9 +72,11 @@ var
   AllMedia: array of TMediaInfo;
   AllVideos: array of TVideoInfo;
   AllCovers: array of TBitmap;
+  channel: integer; //Bass Channel
 
 const
   SELDIRHELP = 1000;
+  WM_INFO_UPDATE = WM_USER + 101;
 
 implementation
 
@@ -80,6 +84,7 @@ implementation
 
 uses configdlg, FileCtrl,MediaFilesFunctions,SQLiteFunctions,
    bass, apifunctions, inifiles, EnhGraphicLib;
+
 
 procedure TMainform.AddFolder1Click(Sender: TObject);
 var Dir: string;
@@ -151,6 +156,10 @@ begin
     if not BASS_Init(0,44100,0,Application.Handle,nil) then
       ShowMessage('Can''t initialize device');
 
+    BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, nil); // disable proxy
+    BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
+  BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
+
     Needs2Create:=not FileExists(DBName);
 
     DB1.Params.Values['database'] := DBName;
@@ -162,7 +171,8 @@ begin
 
      end;
 
-    GridRadios.RowHeights[0]:=24;
+    GridRadios.DefaultRowHeight:=130;
+    GridRadios.RowHeights[0]:=32;
     GridRadios.ColWidths[0]:=130;
     GridRadios.ColWidths[1]:=400;
 
@@ -176,9 +186,27 @@ begin
     Bass_Free();
 end;
 
+procedure TMainform.Image1Click(Sender: TObject);
+var icy: PAnsiChar;
+    Len, Progress: DWORD;
+begin
+  BASS_StreamFree(channel); // close old stream
+  BASS_StreamCreateURL('http://www.radioparadise.com/m3u/mp3-128.m3u', 0,
+                   BASS_STREAM_BLOCK or BASS_STREAM_AUTOFREE, nil, 0);
+  if channel <> 0 then
+    BASS_ChannelPlay(channel, false);
+end;
+
+procedure TMainform.Image2Click(Sender: TObject);
+begin
+if channel <> 0 then
+    BASS_ChannelStop(channel);
+end;
+
 procedure TMainform.Image4Click(Sender: TObject);
 begin
   updateRadioStations('PT','','128','');
+  LoadAllRadios;
 end;
 
 end.
