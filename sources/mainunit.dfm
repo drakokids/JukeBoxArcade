@@ -362,6 +362,24 @@ object Mainform: TMainform
       end
     end
   end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Top = 631
+    Width = 842
+    Height = 19
+    Panels = <
+      item
+        Width = 250
+      end
+      item
+        Width = 250
+      end
+      item
+        Width = 250
+      end>
+    ExplicitTop = 613
+    ExplicitWidth = 832
+  end
   object MainMenu1: TMainMenu
     Left = 776
     Top = 96
