@@ -11,7 +11,7 @@ uses
   FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.VCLUI.Wait, Data.DB,
   FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.Grids, Vcl.ComCtrls,
-  Vcl.Imaging.pngimage, Vcl.ExtCtrls, MediaTypes, bass,mmsystem;
+  Vcl.Imaging.pngimage, Vcl.ExtCtrls, MediaTypes, bass,mmsystem, Vcl.StdCtrls;
 
 type
   TMainform = class(TForm)
@@ -47,6 +47,11 @@ type
     Image3: TImage;
     Image4: TImage;
     StatusBar1: TStatusBar;
+    Panel2: TPanel;
+    TrackBarVolume: TTrackBar;
+    Label1: TLabel;
+    TrackBarPan: TTrackBar;
+    Label2: TLabel;
     procedure Config1Click(Sender: TObject);
     procedure AddFolder1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -57,6 +62,9 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Image1Click(Sender: TObject);
     procedure Image2Click(Sender: TObject);
+    procedure TrackBarVolumeChange(Sender: TObject);
+    procedure MiniScreen1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
@@ -82,6 +90,7 @@ var
   FTimerId: DWORD = 0;
   icy: PAnsiChar = nil;
   progress: integer = 0;
+  volume: integer;
 
 const
   SELDIRHELP = 1000;
@@ -95,7 +104,7 @@ implementation
 {$R *.dfm}
 
 uses configdlg, FileCtrl,MediaFilesFunctions,SQLiteFunctions,
-   apifunctions, inifiles, EnhGraphicLib,functions;
+   apifunctions, inifiles, EnhGraphicLib,functions, miniwindowfrm;
 
 procedure Error(es: string);
 begin
@@ -232,6 +241,8 @@ begin
   BASS_ChannelSetSync(chan, BASS_SYNC_STALL, 0, StallSync, nil);
   // set sync for end of stream
   BASS_ChannelSetSync(chan, BASS_SYNC_END, 0, EndSync, nil);
+  //Change Volume
+  BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, volume/100);
   // play it!
   BASS_ChannelPlay(chan, FALSE);
 
@@ -403,6 +414,12 @@ begin
     BASS_PluginLoad('bassflac.dll', BASS_Unicode); // load BASSFLAC (if present) for FLAC support
     BASS_PluginLoad('basshls.dll', BASS_Unicode); // load BASSHLS (if present) for HLS support
 
+    volume:=50;
+    TrackBarVolume.Position:=volume;
+    //BASS_SetVolume(50/100);  //Muda o volume do proprio PC
+    //volume:=BASS_GetVolume;
+    //TrackBarVolume.Position:=50;
+
 
     Needs2Create:=not FileExists(DBName);
 
@@ -429,6 +446,11 @@ end;
 procedure TMainform.FormDestroy(Sender: TObject);
 begin
     Bass_Free();
+end;
+
+procedure TMainform.FormShow(Sender: TObject);
+begin
+    FormMiniWindow.Show;
 end;
 
 procedure TMainform.Image1Click(Sender: TObject);
@@ -460,6 +482,17 @@ procedure TMainform.Image4Click(Sender: TObject);
 begin
   updateRadioStations('PT','','128','');
   LoadAllRadios;
+end;
+
+procedure TMainform.MiniScreen1Click(Sender: TObject);
+begin
+    FormMiniWindow.Show;
+end;
+
+procedure TMainform.TrackBarVolumeChange(Sender: TObject);
+begin
+    volume:=100-TrackBarVolume.Position;
+    BASS_ChannelSetAttribute(chan, BASS_ATTRIB_VOL, volume/100);
 end;
 
 end.

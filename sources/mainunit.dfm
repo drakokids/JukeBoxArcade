@@ -3,8 +3,9 @@ object Mainform: TMainform
   Top = 0
   Caption = 'JukeBox Arcade Beta'
   ClientHeight = 650
-  ClientWidth = 842
+  ClientWidth = 993
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
@@ -14,13 +15,14 @@ object Mainform: TMainform
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   TextHeight = 15
   object PageControl1: TPageControl
     Left = 24
     Top = 8
     Width = 697
     Height = 593
-    ActivePage = TabRadio
+    ActivePage = TabAlbums
     TabOrder = 0
     object TabAlbums: TTabSheet
       Caption = 'Albums'
@@ -365,7 +367,7 @@ object Mainform: TMainform
   object StatusBar1: TStatusBar
     Left = 0
     Top = 631
-    Width = 842
+    Width = 993
     Height = 19
     Panels = <
       item
@@ -377,8 +379,54 @@ object Mainform: TMainform
       item
         Width = 250
       end>
-    ExplicitTop = 613
-    ExplicitWidth = 832
+    ExplicitWidth = 842
+  end
+  object Panel2: TPanel
+    Left = 808
+    Top = 0
+    Width = 185
+    Height = 631
+    Align = alRight
+    TabOrder = 2
+    ExplicitTop = 8
+    object Label1: TLabel
+      Left = 24
+      Top = 13
+      Width = 22
+      Height = 15
+      Caption = 'VOL'
+    end
+    object Label2: TLabel
+      Left = 96
+      Top = 13
+      Width = 23
+      Height = 15
+      Caption = 'PAN'
+    end
+    object TrackBarVolume: TTrackBar
+      Left = 16
+      Top = 26
+      Width = 45
+      Height = 239
+      Max = 100
+      Orientation = trVertical
+      TabOrder = 0
+      TickMarks = tmBoth
+      TickStyle = tsManual
+      OnChange = TrackBarVolumeChange
+    end
+    object TrackBarPan: TTrackBar
+      Left = 88
+      Top = 26
+      Width = 45
+      Height = 239
+      Max = 100
+      Min = -100
+      Orientation = trVertical
+      TabOrder = 1
+      TickMarks = tmBoth
+      TickStyle = tsManual
+    end
   end
   object MainMenu1: TMainMenu
     Left = 776
@@ -403,6 +451,7 @@ object Mainform: TMainform
       end
       object MiniScreen1: TMenuItem
         Caption = 'Mini Screen'
+        OnClick = MiniScreen1Click
       end
       object Radio1: TMenuItem
         Caption = 'Radio'
