@@ -16,8 +16,8 @@ function MediaFileExists(filename:string):boolean;
 procedure MediaAddFile(filename: string; MediaInfo: TMediaInfo);
 function EncodeString(Original: string):string;
 function DecodeString(Original: string):string;
-function RadioExists(url:string):boolean;
-procedure AddRadio(name,url,tags,favicon,countrycode,codec,bitrate:string);
+function RadioExists(stationuuid:string):boolean;
+procedure AddRadio(stationuuid,name,url,tags,favicon,countrycode,codec,bitrate:string);
 
 implementation
 
@@ -66,7 +66,7 @@ begin
         'AlbumID INTEGER, MusicID INTEGER)');
 
        connection1.ExecSQL('CREATE TABLE IF NOT EXISTS RadioStreams ('+
-        'ID INTEGER,StreamName TEXT, URL TEXT,'+
+        'ID INTEGER,stationuuid TEXT, StreamName TEXT, URL TEXT,'+
         'homepage TEXT, tags TEXT, countrycode TEXT, codec TEXT, '+
         'bitrate TEXT,lastdateok TEXT,cover TEXT,'+
         'PRIMARY KEY ("ID" AUTOINCREMENT))');
@@ -128,21 +128,21 @@ begin
     result:=destiny;
 end;
 
-function RadioExists(url:string):boolean;
+function RadioExists(stationuuid:string):boolean;
 var query1: TFDQuery;
 begin
     query1:=TFDQuery.Create(nil);
     query1.Connection:=mainform.DB1;
-    query1.SQL.Text:='Select count(*) as howmany from radiostreams where url='''+url+'''';
+    query1.SQL.Text:='Select count(*) as howmany from radiostreams where stationuuid='''+stationuuid+'''';
     query1.open;
     result:=query1.fieldbyname('howmany').asstring<>'0';
     query1.Free;
 end;
 
-procedure AddRadio(name,url,tags,favicon,countrycode,codec,bitrate:string);
+procedure AddRadio(stationuuid,name,url,tags,favicon,countrycode,codec,bitrate:string);
 var id,extension,cover:string;
 begin
-   if RadioExists(url) then exit;
+   if RadioExists(stationuuid) then exit;
 
    cover:='';
 
@@ -154,9 +154,9 @@ begin
      cover:='radio_'+id+extension;
     end;
 
-   mainform.DB1.ExecSQL('insert into radiostreams(StreamName, URL,'+
+   mainform.DB1.ExecSQL('insert into radiostreams(stationuuid, StreamName, URL,'+
         'homepage, tags, countrycode, codec, bitrate,cover,lastdateok)values('''+
-        EncodeString(name)+''','''+url+''','''','''+EncodeString(tags)+''','''+countrycode+''','''+
+        stationuuid+''','''+EncodeString(name)+''','''+url+''','''','''+EncodeString(tags)+''','''+countrycode+''','''+
         codec+''','''+bitrate+''','''+cover+''','''')');
 
 end;

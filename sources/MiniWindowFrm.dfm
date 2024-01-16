@@ -11,12 +11,10 @@ object FormMiniWindow: TFormMiniWindow
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OnShow = FormShow
+  OldCreateOrder = True
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnResize = FormResize
+  PixelsPerInch = 96
   TextHeight = 15
-  object PaintBox1: TPaintBox
-    Left = 8
-    Top = 8
-    Width = 545
-    Height = 313
-  end
 end

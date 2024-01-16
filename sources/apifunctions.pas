@@ -11,7 +11,7 @@ implementation
 uses functions,djson,sqliteFunctions;
 
 procedure updateRadioStations(countrycode,tags,bitratemin,codec: string);
-var netfile,url: string;
+var netfile,url,stationuuid: string;
     jsonfile: TStrings;
     radios, radio:  TdJSON;
     radioname,radiourl,radiotags,radiobitrate,radiocodec,radiocountrycode,radiofavicon:string;
@@ -33,6 +33,7 @@ begin
   radios := TdJSON.Parse(jsonfile.Text);
   for radio in radios do
    begin
+    stationuuid:=radio['stationuuid'].AsString;
     radioname:=radio['name'].AsString;
     radiourl:=radio['url_resolved'].AsString;
     radiotags:=radio['tags'].AsString;
@@ -40,7 +41,7 @@ begin
     radiocodec:=radio['codec'].AsString;
     radiocountrycode:=radio['countrycode'].AsString;
     radiofavicon:=radio['favicon'].AsString;
-    AddRadio(radioname,radiourl,radiotags,radiofavicon,radiocountrycode,
+    AddRadio(stationuuid,radioname,radiourl,radiotags,radiofavicon,radiocountrycode,
         radiocodec,radiobitrate);
    end;
   radios.Free;

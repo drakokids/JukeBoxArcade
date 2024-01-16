@@ -11,7 +11,8 @@ uses
   FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.VCLUI.Wait, Data.DB,
   FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.Grids, Vcl.ComCtrls,
-  Vcl.Imaging.pngimage, Vcl.ExtCtrls, MediaTypes, bass,mmsystem, Vcl.StdCtrls;
+  Vcl.Imaging.pngimage, Vcl.ExtCtrls, MediaTypes, bass,mmsystem, Vcl.StdCtrls,
+  miniwindowfrm,maxiwindowfrm;
 
 type
   TMainform = class(TForm)
@@ -52,6 +53,8 @@ type
     Label1: TLabel;
     TrackBarPan: TTrackBar;
     Label2: TLabel;
+    TimerUpdateAudioStatus: TTimer;
+    MaxiScreen1: TMenuItem;
     procedure Config1Click(Sender: TObject);
     procedure AddFolder1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -64,7 +67,8 @@ type
     procedure Image2Click(Sender: TObject);
     procedure TrackBarVolumeChange(Sender: TObject);
     procedure MiniScreen1Click(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+    procedure TimerUpdateAudioStatusTimer(Sender: TObject);
+    procedure MaxiScreen1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -74,6 +78,8 @@ type
 
 var
   Mainform: TMainform;
+  FormMini: TFormMiniWindow;
+  FormMaxi: TmaxiWindowForm;
   AppFolder,IconsFolder,DBName: string;
   AllRadios: array of TRadioInfo;
   AllAuthors: array of TAuthorInfo;
@@ -90,7 +96,13 @@ var
   FTimerId: DWORD = 0;
   icy: PAnsiChar = nil;
   progress: integer = 0;
-  volume: integer;
+  volume: integer; //Volume of channel by default
+  Mainvolume: single; //Volume of PC
+  KBHook: HHook; {this intercepts keyboard input}
+  CurrentScene: integer;
+  SelectedButton, SelectedRadio,SelectedAlbum, SelectedMusic: integer;
+  PlayingRadio: integer; //What radio is playing at the moment?
+  debugString: string;
 
 const
   SELDIRHELP = 1000;
@@ -98,13 +110,150 @@ const
   // HLS definitions (copied from BASSHLS.pas)
   BASS_SYNC_HLS_SEGMENT = $10300;
   BASS_TAG_HLS_EXTINF = $14000;
+    MainScene=0;
+  ConfigScene=1;
+  RadiosBrowseScene=2;
+  AlbunsBrowseScene=3;
+  RadioPlayScene=4;
+  AlbumPlayScene=5;
+  CDPlayScene=6;
+  CDImportScene=7;
+  WeatherScene=8;
+  BrowserScene=9;
+  GamesScene=10;
+  MENU_COLS=3;
+  MENU_ROWS=3;
+
+function KeyboardHookProc(Code: Integer; WordParam: Word; LongParam: LongInt): LongInt; stdcall;
+function OpenURL(url: PWideChar): integer;
 
 implementation
 
 {$R *.dfm}
 
 uses configdlg, FileCtrl,MediaFilesFunctions,SQLiteFunctions,
-   apifunctions, inifiles, EnhGraphicLib,functions, miniwindowfrm;
+   apifunctions, inifiles, EnhGraphicLib,functions;
+
+function KeyboardHookProc(Code: Integer; WordParam: Word; LongParam: LongInt) : LongInt;
+var tentative: integer;
+    playinfo: cardinal;
+    ThreadId: Cardinal;
+begin
+   if (Code < 0)
+   or (Code = HC_NOREMOVE )
+   or (LongParam<0) then
+   begin
+      Result := CallNextHookEx(KBHook, Code, WordParam, LongParam);
+      Exit;
+   end;
+   //Workparam VK_SHIFT, VK_CAPITAL, VK_MENU, VK_BACK, VK_TAB, VK_RETURN, VK_ESCAPE
+   //VK_F1, VK_F2, VK_F3, .... VK_NUMPAD0, VK_NUMPAD1, ....
+   debugString:='Key '+inttostr(Code)+ ' word '+inttostr(wordparam)+' long '+inttostr(LongParam);
+   //ShowMessage('Key '+inttostr(Code)+ ' word '+inttostr(wordparam)+' long '+inttostr(LongParam));
+
+   case wordparam of
+     39: begin //Right
+          if CurrentScene=0 then
+           begin
+            SelectedButton:=SelectedButton+1;
+            if SelectedButton>=length(Buttons) then SelectedButton:=0;
+           end;
+          if CurrentScene=2 then
+           begin
+            SelectedRadio:=SelectedRadio+1;
+            if SelectedRadio>=length(AllRadios) then SelectedRadio:=0;
+           end;
+     end;
+
+     37: begin //left
+          if CurrentScene=0 then
+           begin
+             SelectedButton:=SelectedButton-1;
+             if SelectedButton<0 then
+              SelectedButton:=length(Buttons)-1;
+           end;
+          if CurrentScene=2 then
+           begin
+            SelectedRadio:=SelectedRadio-1;
+            if SelectedRadio>=length(AllRadios) then SelectedRadio:=0;
+           end;
+     end;
+
+     38: begin //Up
+          if CurrentScene=0 then
+           begin
+            tentative:=SelectedButton-MENU_COLS;
+            if tentative>=0 then SelectedButton:=SelectedButton-MENU_COLS;
+           end;
+     end;
+
+     40: begin //Down
+          if CurrentScene=0 then
+           begin
+            tentative:=SelectedButton+MENU_COLS;
+            if tentative<length(buttons)-1 then SelectedButton:=SelectedButton+MENU_COLS;
+           end;
+     end;
+
+     27: begin //Back
+       if CurrentScene in [2,3,6] then CurrentScene:=0;
+     end;
+
+     13: begin //OK
+       if CurrentScene=0 then
+         begin
+          if Buttons[SelectedButton].Key='RADIO' then
+           begin
+            selectedRadio:=-1;
+            CurrentScene:=2; //Radios Browse
+           end;
+
+         end;
+
+       if CurrentScene=2 then //Radio Listing
+        begin
+          playinfo:=BASS_ChannelIsActive(chan);
+          case playinfo of
+            BASS_ACTIVE_PLAYING: begin
+              if SelectedRadio=PlayingRadio then
+               begin
+                KillTimer(win, FTimerId);
+                BASS_StreamFree(chan); // close old stream
+               end
+              else
+               begin
+                 PlayingRadio:=SelectedRadio;
+                  BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, nil); // disable proxy
+                // open URL in a new thread (so that main thread is free)
+                  cthread := BeginThread(nil, 0, @OpenURL,
+                      PWideChar(AllRadios[SelectedRadio].url), 0, ThreadId)
+               end;
+            end;
+            BASS_ACTIVE_STOPPED,BASS_ACTIVE_PAUSED: begin
+             if (cthread <> 0) then
+                MessageBeep(0)
+              else
+              begin
+                if SelectedRadio>=0 then
+                 begin
+                  PlayingRadio:=SelectedRadio;
+                  BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, nil); // disable proxy
+                // open URL in a new thread (so that main thread is free)
+                  cthread := BeginThread(nil, 0, @OpenURL,
+                      PWideChar(AllRadios[SelectedRadio].url), 0, ThreadId);
+                 end;
+               end;
+            end;
+          end;
+
+        end;
+     end;
+
+   end;
+
+
+end;
+
 
 procedure Error(es: string);
 begin
@@ -398,6 +547,7 @@ begin
 
     myini:=TInifile.Create(AppFolder+'\config.ini');
     IconsFolder:=myini.ReadString('MAIN','mediafolder','')+'\icons';
+    forcedirectories(IconsFolder);
     DBName:=myini.ReadString('MAIN','database','');
     myini.Free;
 
@@ -419,6 +569,8 @@ begin
     //BASS_SetVolume(50/100);  //Muda o volume do proprio PC
     //volume:=BASS_GetVolume;
     //TrackBarVolume.Position:=50;
+    Mainvolume:=BASS_GetVolume;
+    TimerUpdateAudioStatus.Enabled:=true;
 
 
     Needs2Create:=not FileExists(DBName);
@@ -439,6 +591,12 @@ begin
     GridRadios.ColWidths[2]:=400;
 
     LoadAllRadios;
+
+       {Set the keyboard hook so we  can intercept keyboard input}
+    KBHook:=SetWindowsHookEx(WH_KEYBOARD,
+            {callback >} @KeyboardHookProc,
+                           HInstance,
+                           GetCurrentThreadId()) ;
     
 
 end;
@@ -446,11 +604,8 @@ end;
 procedure TMainform.FormDestroy(Sender: TObject);
 begin
     Bass_Free();
-end;
-
-procedure TMainform.FormShow(Sender: TObject);
-begin
-    FormMiniWindow.Show;
+    {unhook the keyboard interception}
+   UnHookWindowsHookEx(KBHook) ;
 end;
 
 procedure TMainform.Image1Click(Sender: TObject);
@@ -484,9 +639,21 @@ begin
   LoadAllRadios;
 end;
 
+procedure TMainform.MaxiScreen1Click(Sender: TObject);
+begin
+  FormMaxi:=TmaxiWindowForm.Create(self);
+  FormMaxi.Show;
+end;
+
 procedure TMainform.MiniScreen1Click(Sender: TObject);
 begin
-    FormMiniWindow.Show;
+    FormMini:=TFormMiniWindow.Create(self);
+    FormMini.Show;
+end;
+
+procedure TMainform.TimerUpdateAudioStatusTimer(Sender: TObject);
+begin
+    Mainvolume:=BASS_GetVolume;
 end;
 
 procedure TMainform.TrackBarVolumeChange(Sender: TObject);

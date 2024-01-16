@@ -12,17 +12,19 @@ object Mainform: TMainform
   Font.Name = 'Segoe UI'
   Font.Style = []
   Menu = MainMenu1
+  OldCreateOrder = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnShow = FormShow
+  PixelsPerInch = 96
   TextHeight = 15
   object PageControl1: TPageControl
-    Left = 24
-    Top = 8
-    Width = 697
-    Height = 593
-    ActivePage = TabAlbums
+    Left = 0
+    Top = 0
+    Width = 808
+    Height = 631
+    ActivePage = TabRadio
+    Align = alClient
     TabOrder = 0
     object TabAlbums: TTabSheet
       Caption = 'Albums'
@@ -51,18 +53,20 @@ object Mainform: TMainform
       Caption = 'Radio'
       ImageIndex = 2
       object GridRadios: TDrawGrid
-        Left = 32
-        Top = 32
-        Width = 625
-        Height = 409
+        Left = 0
+        Top = 0
+        Width = 800
+        Height = 542
+        Align = alClient
         DefaultRowHeight = 64
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goFixedRowDefAlign]
         TabOrder = 0
         OnDrawCell = GridRadiosDrawCell
       end
       object Panel1: TPanel
         Left = 0
-        Top = 504
-        Width = 689
+        Top = 542
+        Width = 800
         Height = 59
         Align = alBottom
         TabOrder = 1
@@ -137,7 +141,7 @@ object Mainform: TMainform
         end
         object Image2: TImage
           Left = 63
-          Top = 5
+          Top = 6
           Width = 48
           Height = 48
           AutoSize = True
@@ -379,7 +383,6 @@ object Mainform: TMainform
       item
         Width = 250
       end>
-    ExplicitWidth = 842
   end
   object Panel2: TPanel
     Left = 808
@@ -388,7 +391,6 @@ object Mainform: TMainform
     Height = 631
     Align = alRight
     TabOrder = 2
-    ExplicitTop = 8
     object Label1: TLabel
       Left = 24
       Top = 13
@@ -449,6 +451,10 @@ object Mainform: TMainform
       object VScreen1: TMenuItem
         Caption = 'TV Screen'
       end
+      object MaxiScreen1: TMenuItem
+        Caption = 'Maxi Screen'
+        OnClick = MaxiScreen1Click
+      end
       object MiniScreen1: TMenuItem
         Caption = 'Mini Screen'
         OnClick = MiniScreen1Click
@@ -493,5 +499,11 @@ object Mainform: TMainform
     Connection = DB1
     Left = 776
     Top = 176
+  end
+  object TimerUpdateAudioStatus: TTimer
+    Enabled = False
+    OnTimer = TimerUpdateAudioStatusTimer
+    Left = 880
+    Top = 336
   end
 end
